@@ -1404,9 +1404,6 @@ static int bcl_probe(struct platform_device *pdev)
 	struct bcl_device *bcl_perph = NULL;
 	char bcl_name[MAX_BCL_NAME_LENGTH];
 	int err = 0, ret = 0;
-#ifdef OPLUS_FEATURE_CHG_BASIC
-	struct proc_dir_entry *proc_node;
-#endif
 
 	if (bcl_device_ct >= MAX_PERPH_COUNT) {
 		dev_err(&pdev->dev, "Max bcl peripheral supported already.\n");
@@ -1447,11 +1444,13 @@ static int bcl_probe(struct platform_device *pdev)
 	}
 
 #ifdef OPLUS_FEATURE_CHG_BASIC
-	oplus_bcl_stat = proc_mkdir("bcl_stat", NULL);
-	if (oplus_bcl_stat)
-		proc_node = proc_create("bcl_count", 0664, oplus_bcl_stat, &proc_bcl_count);
-	else
-		dev_err(&pdev->dev, "Couldn't creat oplus bcl_stat\n");
+	if (!oplus_bcl_stat) {
+		oplus_bcl_stat = proc_mkdir("bcl_stat", NULL);
+		if (!oplus_bcl_stat)
+			dev_err(&pdev->dev, "Couldn't create oplus bcl_stat\n");
+		else
+			proc_create("bcl_count", 0664, oplus_bcl_stat, &proc_bcl_count);
+	}
 
 	if (bcl_perph->support_dynamic_vbat) {
 		INIT_WORK(&bcl_perph->vbat_check_work, bcl_vbat_check);
